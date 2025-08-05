@@ -20,6 +20,9 @@
         public string Name { get; set; }
         public int ItemsCount { get; set; }
         public string Size { get; set; }
+        public int foldersCount { get; set; }
+        public bool hasUniquePermissions {  get; set; }
+        public bool hasCheckedOutFiles { get; set; }
     }
 
     public class SPLibrary
@@ -27,6 +30,9 @@
         public string Name { get; set; }
         public int FilesCount { get; set; }
         public string Size { get; set; }
+        public int foldersCount { get; set; }
+        public bool hasUniquePermissions {  get; set; }
+        public bool hasCheckedOutFiles { get; set; }
     }
 
     public class Subsite

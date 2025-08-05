@@ -1,51 +1,21 @@
-﻿using Microsoft.Data.Sqlite;
+﻿
+using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace SharePointAnalyserDemo
+namespace SharePointAnalyserDemo.Analyzer
 {
-    public class Analyser
+    public class Goverence 
     {
+        private readonly Utility _utility;
         private readonly string _connectionString;
         private static readonly HttpClient client = new HttpClient();
-        private const string ApiKey = "AIzaSyD9qy9ECXonC1aT41YJHdaOk_suVi4GkAo";
-
-
-        public Analyser(string dbPath)
+        private readonly string ApiKey;
+        public Goverence()
         {
-            _connectionString = $"Data Source={dbPath};";
-        }
-
-        public ConnectedSiteInfo GetConnectedSiteInfo()
-        {
-            var connectedSite = new ConnectedSiteInfo
-            {
-                //ConnectedSiteName = "01-07",
-                ConnectedSiteName = "Governance Dashboard-Subsites",
-                //ConnectedSiteUrl = "https://zkny4.sharepoint.com/sites/01-07"
-                ConnectedSiteUrl = "https://580wlx.sharepoint.com/sites/GovernanceDashboard-Subsites"
-            };
-
-
-            connectedSite.webId= GetDataFromSqlLite<string>($"SELECT WebId FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
-            
-            connectedSite.SubSitesCount = GetDataFromSqlLite<int>($"SELECT WebsCount FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
-            connectedSite.SiteId = GetDataFromSqlLite<string>($"SELECT SiteId FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
-            connectedSite.ServerRelativeUrl = GetDataFromSqlLite<string>($"SELECT serverRelativeUrl FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
-
-            connectedSite.ListsCount = GetDataFromSqlLite<int>(
-                $"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{connectedSite.SiteId}' AND ParentWebUrl = '{connectedSite.ServerRelativeUrl}' AND BaseTemplate != '101'"
-            );
-            connectedSite.LibraryCount = GetDataFromSqlLite<int>(
-                $"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{connectedSite.SiteId}' AND ParentWebUrl = '{connectedSite.ServerRelativeUrl}' AND BaseTemplate = '101'"
-            );
-
-            connectedSite.Lists = GetLists(connectedSite.SiteId, connectedSite.ServerRelativeUrl, isLibrary: false);
-            connectedSite.Libraries = GetLibraries(connectedSite.SiteId, connectedSite.ServerRelativeUrl);
-
-            connectedSite.Subsites = GetSubsites(connectedSite.SiteId, connectedSite.webId);
-
-            return connectedSite;
+            _utility = new Utility(Configuration.GovernanceConnectionString);
+            _connectionString = Configuration.GovernanceConnectionString;
+            ApiKey = Configuration.ApiKey;
         }
 
         public async Task<string> Analyse(ConnectedSiteInfo siteInfo)
@@ -106,17 +76,36 @@ namespace SharePointAnalyserDemo
             return outputText ?? responseString;
         }
 
-        private T GetDataFromSqlLite<T>(string sql)
+        public Object GetData()
         {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var command = new SqliteCommand(sql, connection);
-            var result = command.ExecuteScalar();
+            var connectedSite = new ConnectedSiteInfo
+            {
+                //ConnectedSiteName = "01-07",
+                ConnectedSiteName = "Governance Dashboard-Subsites",
+                //ConnectedSiteUrl = "https://zkny4.sharepoint.com/sites/01-07"
+                ConnectedSiteUrl = "https://580wlx.sharepoint.com/sites/GovernanceDashboard-Subsites"
+            };
 
-            if (result == null || result == DBNull.Value)
-                return default;
 
-            return (T)Convert.ChangeType(result, typeof(T));
+            connectedSite.webId = _utility.GetDataFromSqlLite<string>($"SELECT WebId FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
+
+            connectedSite.SubSitesCount = _utility.GetDataFromSqlLite<int>($"SELECT WebsCount FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
+            connectedSite.SiteId = _utility.GetDataFromSqlLite<string>($"SELECT SiteId FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
+            connectedSite.ServerRelativeUrl = _utility.GetDataFromSqlLite<string>($"SELECT serverRelativeUrl FROM SPO365Web WHERE Url = '{connectedSite.ConnectedSiteUrl}'");
+
+            connectedSite.ListsCount = _utility.GetDataFromSqlLite<int>(
+                $"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{connectedSite.SiteId}' AND ParentWebUrl = '{connectedSite.ServerRelativeUrl}' AND BaseTemplate != '101'"
+            );
+            connectedSite.LibraryCount = _utility.GetDataFromSqlLite<int>(
+                $"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{connectedSite.SiteId}' AND ParentWebUrl = '{connectedSite.ServerRelativeUrl}' AND BaseTemplate = '101'"
+            );
+
+            connectedSite.Lists = GetLists(connectedSite.SiteId, connectedSite.ServerRelativeUrl, isLibrary: false);
+            connectedSite.Libraries = GetLibraries(connectedSite.SiteId, connectedSite.ServerRelativeUrl);
+
+            connectedSite.Subsites = GetSubsites(connectedSite.SiteId, connectedSite.webId);
+
+            return connectedSite;
         }
 
         private List<SPList> GetLists(string siteId, string serverRelativeUrl, bool isLibrary)
@@ -164,6 +153,7 @@ namespace SharePointAnalyserDemo
             return result;
         }
 
+
         private List<Subsite> GetSubsites(string parentSiteId, string parentWebId)
         {
             string sql = $"SELECT Title, Url, WebsCount, serverRelativeUrl FROM SPO365Web WHERE ParentWebId = '{parentWebId}'";
@@ -178,8 +168,8 @@ namespace SharePointAnalyserDemo
             {
                 string subsiteUrl = reader["Url"].ToString();
                 string subServerRelUrl = reader["serverRelativeUrl"].ToString();
-                string subSiteId = GetDataFromSqlLite<string>($"SELECT SiteId FROM SPO365Web WHERE Url = '{subsiteUrl}'");
-                string subWebId = GetDataFromSqlLite<string>($"SELECT webId FROM SPO365Web WHERE Url = '{subsiteUrl}'");
+                string subSiteId = _utility.GetDataFromSqlLite<string>($"SELECT SiteId FROM SPO365Web WHERE Url = '{subsiteUrl}'");
+                string subWebId = _utility.GetDataFromSqlLite<string>($"SELECT webId FROM SPO365Web WHERE Url = '{subsiteUrl}'");
 
                 var subsite = new Subsite
                 {
@@ -188,11 +178,11 @@ namespace SharePointAnalyserDemo
                     SubsiteSiteUrl = subsiteUrl,
                     SubSitesCount = Convert.ToInt32(reader["WebsCount"]),
                     ServerRelativeUrl = subServerRelUrl,
-                    ListsCount = GetDataFromSqlLite<int>($"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{subSiteId}' AND ParentWebUrl = '{subServerRelUrl}' AND BaseTemplate != '101'"),
-                    LibraryCount = GetDataFromSqlLite<int>($"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{subSiteId}' AND ParentWebUrl = '{subServerRelUrl}' AND BaseTemplate = '101'"),
+                    ListsCount = _utility.GetDataFromSqlLite<int>($"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{subSiteId}' AND ParentWebUrl = '{subServerRelUrl}' AND BaseTemplate != '101'"),
+                    LibraryCount = _utility.GetDataFromSqlLite<int>($"SELECT COUNT(*) FROM SPO365List WHERE SiteId = '{subSiteId}' AND ParentWebUrl = '{subServerRelUrl}' AND BaseTemplate = '101'"),
                     Lists = GetLists(subSiteId, subServerRelUrl, isLibrary: false),
                     Libraries = GetLibraries(subSiteId, subServerRelUrl),
-                    Subsites = GetSubsites(subSiteId, subWebId) 
+                    Subsites = GetSubsites(subSiteId, subWebId)
                 };
 
                 subsites.Add(subsite);
