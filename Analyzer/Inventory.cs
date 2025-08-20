@@ -20,27 +20,27 @@ namespace SharePointAnalyserDemo.Analyzer
 
         public async Task<string> Analyse(System.Object data)
         {
-            string siteDataJson = JsonConvert.SerializeObject(data, Formatting.Indented);
+            string siteDataJson = JsonConvert.SerializeObject(data, Formatting.None);
 
             string prompt = $@"
-                            The following JSON contains inventory data from one or more SharePoint objects, including:
+                The following JSON contains detailed inventory data from multiple SharePoint sites, including site collections, subsites, lists, libraries, and items with metadata such as counts, sizes, check-out status, and permissions.
 
-                            - Site collections, subsites, lists, libraries
-                            - Files and folders with version and size details
-                            - Metadata such as item count, size in bytes, check-out status, unique permissions, and more
+                Analyze this data and identify only the most critical issues and up to 4 high-impact best practices or improvements that should be implemented or reinforced. Focus exclusively on recommendations that will significantly enhance performance, governance, or storage efficiency.
 
-                            Based on this data, list the top 4 SharePoint best practices that should be implemented or followed. 
-                            Focus only on the most impactful practices that improve performance, governance, or storage efficiency.
+                Do not mention or expose any internal property names, criteria, or data labels in your response. Base your findings purely on the data structure and values.
 
-                             Format your response as follows:
-                            issues:
-                            - List the top 4 most significant best practices, starting with the most critical.
+                Format your response strictly as follows:
 
-                            Note: Convert sizes to MB/GB for clarity where needed.
+                issues:
+                - <List up to 4 critical issues or state: 'No major issues detected based on current data.'>
 
-                            Data:
-                            {siteDataJson}";
+                improvements:
+                - <List up to 4 relevant best practices or improvements, leave blank if none>
 
+                Note: All sizes are in bytes. Convert to MB or GB for readability.
+
+                Data:
+                {siteDataJson}";
 
 
             var requestBody = new

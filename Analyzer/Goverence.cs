@@ -18,28 +18,53 @@ namespace SharePointAnalyserDemo.Analyzer
             ApiKey = Configuration.ApiKey;
         }
 
-        public async Task<string> Analyse(ConnectedSiteInfo siteInfo)
+        public async Task<string> Analyse(Object siteInfo)
         {
-            string siteDataJson = JsonConvert.SerializeObject(siteInfo, Formatting.Indented);
+            string siteDataJson = JsonConvert.SerializeObject(siteInfo, Formatting.None);
+
+            //string prompt = $@"
+            //            Assume you are a SharePoint analyst with over 12 years of experience working with SharePoint 2013, 2016, 2019, and SharePoint Online.
+            //            The following JSON represents a SharePoint site's structure. Please analyze the data and provide concise, straightforward recommendations. 
+            //            Focus on identifying the top 4 most critical issues and the top 4 most impactful improvements.
+
+            //            Ensure your response is concise and addresses only the highest priority items.
+
+            //            Format your response as follows:
+            //            issues:
+            //            - List the upto 4 most significant issues, starting with the most critical and ignore minor issues.
+
+            //            improvements:
+            //            - Provide the upto 4 most impactful improvements, ranked by priority.
+
+            //            Note: All sizes are in bytes. When providing your response, please convert them as necessary for clarity.
+
+            //            Site data:
+            //            {siteDataJson}";
 
             string prompt = $@"
-                        Assume you are a SharePoint analyst with over 12 years of experience working with SharePoint 2013, 2016, 2019, and SharePoint Online.
-                        The following JSON represents a SharePoint site's structure. Please analyze the data and provide concise, straightforward recommendations. 
-                        Focus on identifying the top 4 most critical issues and the top 4 most impactful improvements.
+                    Assume you are a SharePoint analyst with over 12 years of experience working with SharePoint 2013, 2016, 2019, and SharePoint Online.
 
-                        Ensure your response is concise and addresses only the highest priority items.
+                    The following JSON represents the structure of a SharePoint site. Analyze the data and identify only the most **critical issues** and **high-impact improvements**, based solely on the current structure.
 
-                        Format your response as follows:
-                        issues:
-                        - List the top 4 most significant issues, starting with the most critical.
-    
-                        improvements:
-                        - Provide the top 4 most impactful improvements, ranked by priority.
+                    Do not interpret or infer anything from names or labels. Do not reveal or reference any internal properties or criteria used in your assessment.
 
-                        Note: All sizes are in bytes. When providing your response, please convert them as necessary for clarity.
-    
-                        Site data:
-                        {siteDataJson}";
+                    If no critical issues are identified, return:
+                    'No major issues detected based on current data.'
+
+                    Provide up to 4 relevant recommendations only if they clearly benefit the performance, user experience, or long-term maintainability of the existing structure.
+
+                    Format your response exactly as follows:
+
+                    issues:
+                    - <List up to 4 critical issues, or state: 'No major issues detected based on current data.'>
+
+                    improvements:
+                    - <List up to 4 improvements, or leave blank if none>
+
+                    Note: All sizes are in bytes. Convert to MB or GB for readability.
+
+                    Site data:
+                    {siteDataJson}";
 
 
             var requestBody = new
@@ -80,10 +105,10 @@ namespace SharePointAnalyserDemo.Analyzer
         {
             var connectedSite = new ConnectedSiteInfo
             {
-                //ConnectedSiteName = "01-07",
-                ConnectedSiteName = "Governance Dashboard-Subsites",
-                //ConnectedSiteUrl = "https://zkny4.sharepoint.com/sites/01-07"
-                ConnectedSiteUrl = "https://580wlx.sharepoint.com/sites/GovernanceDashboard-Subsites"
+                ConnectedSiteName = "01-07",
+                ConnectedSiteUrl = "https://zkny4.sharepoint.com/sites/01-07"
+                //ConnectedSiteName = "Governance Dashboard-Subsites",
+                //ConnectedSiteUrl = "https://580wlx.sharepoint.com/sites/GovernanceDashboard-Subsites"
             };
 
 

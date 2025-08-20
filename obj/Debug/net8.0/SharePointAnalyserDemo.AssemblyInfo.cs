@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SharePointAnalyserDemo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e0ef022d36acc9929366a88978b310b110508ffa")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e554fc4663bc1b1f096528623bcb4d932d70e376")]
 [assembly: System.Reflection.AssemblyProductAttribute("SharePointAnalyserDemo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SharePointAnalyserDemo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
